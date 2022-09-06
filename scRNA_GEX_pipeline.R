@@ -55,9 +55,14 @@ run_pipeline_GEX <- function(path2src,
                          path.to.count.clonaltype,
                          cluster.resolution=0.5,
                          mode_cell_cycle_scoring = "gene_name",
-                         my_random_seed = 411,
+                         my_random_seed = 42,
                          umap.method = "uwot",
-                         ambientRNA_thres = 0.5){
+                         ambientRNA_thres = 0.5,
+                         path.to.renv = NULL){
+  
+  # load renv.lock file
+  # require(renv)
+  # renv::restore(lockfile = path.to.renv)
   
   dir.create(path.to.output, showWarnings = FALSE)
   dir.create(path.to.logfile.dir, showWarnings = FALSE)
@@ -73,6 +78,9 @@ run_pipeline_GEX <- function(path2src,
   source(file.path(path2src, "s8a_cluster_without_integration.R"))
   source(file.path(path2src, "s9_findMarkers.R"))
   
+  # Save SessionIinfo to human readable file
+  writeLines(capture.output(sessionInfo()), file.path(path.to.output, sprintf("%s_sessionInfo.txt", PROJECT)))
+  
   log.file <- sprintf(file.path(path.to.logfile.dir, sprintf("/%s_%s.log", PROJECT, Sys.time())))
   parameter.log.file <- sprintf(file.path(path.to.logfile.dir, sprintf("/%s_%s.parameter.log", PROJECT, Sys.time())))
   
@@ -84,11 +92,17 @@ run_pipeline_GEX <- function(path2src,
   }
   
   write("\n \n ########## ALL INPUT PARAMETERS ########## \n", file=parameter.log.file, append=TRUE)
+  write(sprintf("Using renv: path.to.renv = %s \n", path.to.renv), file=parameter.log.file, append=TRUE)
   write(sprintf("Path to src.: path2src = %s \n", path2src), file=parameter.log.file, append=TRUE)
   write(sprintf("Path to input data: path2input = %s \n", path2input), file=parameter.log.file, append=TRUE)
   write(sprintf("Path to logs dir.: path.to.logfile.dir = %s \n", path.to.logfile.dir), file=parameter.log.file, append=TRUE)
   write(sprintf("Path to 10x doublet estimation: %s \n", path.to.10X.doublet.estimation), file=parameter.log.file, append=TRUE)
   write(sprintf("MINCELLS = %s, MINGENES = %s, PROJECT_NAME = %s \n", MINCELLS, MINGENES, PROJECT), file=parameter.log.file, append=TRUE)
+  # all filter thresholds
+  for (crit in names(filter.thresholds)){
+    write(sprintf("%s = %s\n", crit, filter.thresholds[[crit]]), file=parameter.log.file, append=TRUE)
+  }
+  
   write(sprintf("Path to output dir.: %s \n", path.to.output), file=parameter.log.file, append=TRUE)
   write(sprintf("Use SCTRANSFORM: %s \n", use.sctransform), file=parameter.log.file, append=TRUE)
   write(sprintf("Pct.mitochondrial: %s", filter.thresholds$pct_mitoceiling),file=parameter.log.file, append=TRUE)
@@ -269,7 +283,8 @@ run_pipeline_GEX <- function(path2src,
                           pct_mitofloor = filter.thresholds$pct_mitofloor, 
                           pct_mitoceiling = filter.thresholds$pct_mitoceiling,
                           pct_ribofloor = filter.thresholds$pct_ribofloor, 
-                          pct_riboceiling = filter.thresholds$pct_riboceiling)
+                          pct_riboceiling = filter.thresholds$pct_riboceiling,
+                          ambientRNA_thres = filter.thresholds$ambientRNA_thres)
       status.message <- sprintf("New output is saved at %s", file.path(path.to.output, "s3_output", sprintf("%s.output.s3.rds", PROJECT)))
       
     } else {
@@ -476,8 +491,5 @@ run_pipeline_GEX <- function(path2src,
   return(s.obj)
 }
 
-# TO DO: 
-# - automatically generate QC report. 
-# - automatically generate clustering results and cluster markers + conserved markers across conditions. 
   
   

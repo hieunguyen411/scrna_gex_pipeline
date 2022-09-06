@@ -10,19 +10,42 @@ s3.filter <- function(s.obj,
                       pct_mitoceiling,
                       pct_ribofloor, 
                       pct_riboceiling,
-                      ambientRNA_thres = 0.5){
+                      ambientRNA_thres){
   
-  # s.obj <- subset(s.obj, subset = nFeature_RNA > nFeatureRNAfloor &
-  #                   nFeature_RNA < nFeatureRNAceiling&
-  #                   nCount_RNA > nCountRNAfloor&
-  #                   nCount_RNA < nCountRNAceiling &
-  #                   percent.mt > pct_mitofloor&
-  #                   percent.mt < pct_mitoceiling &
-  #                   percent.ribo > pct_ribofloor &
-  #                   percent.ribo < pct_riboceiling)
+  if (is.null(nFeatureRNAfloor) == FALSE){
+    s.obj <- subset(s.obj, subset = nFeature_RNA > nFeatureRNAfloor)
+  }
   
-  s.obj <- subset(s.obj, subset = percent.mt < pct_mitoceiling)
-  s.obj <- subset(s.obj, subset = AmbientRNA < ambientRNA_thres)
+  if(is.null(nFeatureRNAceiling) == FALSE){
+    s.obj <- subset(s.obj, subset = nFeature_RNA < nFeatureRNAceiling)
+  }
+  
+  if (is.null(nCountRNAfloor) == FALSE){
+    s.obj <- subset(s.obj, subset = nCount_RNA > nCountRNAfloor)
+  }
+  
+  if(is.null(nCountRNAceiling) == FALSE){
+    s.obj <- subset(s.obj, subset = nCount_RNA < nCountRNAceiling)
+  }
+  
+  if (is.null(pct_mitofloor) == FALSE){
+    s.obj <- subset(s.obj, subset = percent.mt > pct_mitofloor)
+  }
+  
+  if (is.null(pct_mitoceiling) == FALSE){
+    s.obj <- subset(s.obj, subset = percent.mt < pct_mitoceiling)
+  }
+  
+  if (is.null(pct_ribofloor) == FALSE){
+    s.obj <- subset(s.obj, subset = percent.ribo > pct_ribofloor)    
+  }
+  if (is.null(pct_riboceiling) == FALSE){
+    s.obj <- subset(s.obj, subset = percent.ribo < pct_riboceiling)    
+  }
+  
+  if (is.null(ambientRNA_thres) == FALSE){
+    s.obj <- subset(s.obj, subset = AmbientRNA < ambientRNA_thres)    
+  }
   
   if (save.RDS.s3 == TRUE){
     dir.create(file.path(path.to.output, "s3_output"), showWarnings = FALSE)
