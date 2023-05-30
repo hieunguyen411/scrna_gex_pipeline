@@ -65,7 +65,9 @@ run_pipeline_GEX <- function(path2src,
                          num.dim.cluster=30,
                          remove_XY_genes,
                          with.VDJ,
-                         genes.to.run.PCA = NULL){
+                         genes.to.run.PCA = NULL,
+                         inte_pca_reduction_name = "INTE_PCA",
+                         inte_umap_reduction_name = "INTE_UMAP"){
   
   # load renv.lock file
   # require(renv)

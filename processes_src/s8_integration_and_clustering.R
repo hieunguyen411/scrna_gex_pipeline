@@ -9,7 +9,8 @@ s8.integration.and.clustering <- function(s.obj,
                            my_random_seed = 42,
                            umap.method = "uwot",
                            genes.to.run.PCA = NULL,
-                           ){
+                           inte_pca_reduction_name = "INTE_PCA", 
+                           inte_umap_reduction_name = "INTE_UMAP"){
   data.list <- SplitObject(s.obj, split.by = "name")
   
   data.list <- lapply(X = data.list, FUN = function(x) {
@@ -37,16 +38,16 @@ s8.integration.and.clustering <- function(s.obj,
   s.obj <- ScaleData(s.obj, verbose = FALSE, features = row.names(s.obj))
   
   if (is.null(genes.to.run.PCA) == TRUE){
-    s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name="INTE_PCA")
+    s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name=inte_pca_reduction_name)
   } else {
-    s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name="INTE_PCA", features = genes.to.run.PCA)
+    s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name=inte_pca_reduction_name, features = genes.to.run.PCA)
   }
   
-  s.obj <- RunUMAP(s.obj, reduction = "INTE_PCA", dims = 1:num.PCA, reduction.name="INTE_UMAP", 
+  s.obj <- RunUMAP(s.obj, reduction = inte_pca_reduction_name, dims = 1:num.PCA, reduction.name=inte_umap_reduction_name, 
                    seed.use = my_random_seed, umap.method = umap.method)
   
   # clustering 
-  s.obj <- FindNeighbors(s.obj, reduction = "INTE_PCA", dims = 1:num.dim.cluster)
+  s.obj <- FindNeighbors(s.obj, reduction = inte_pca_reduction_name, dims = 1:num.dim.cluster)
   
   s.obj <- FindClusters(s.obj, resolution = cluster.resolution, random.seed = 0)
   
