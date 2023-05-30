@@ -5,7 +5,9 @@ s8.integration.and.clustering <- function(s.obj,
                            num.dim.integration,
                            num.PCA,
                            num.dim.cluster,
-                           cluster.resolution = 0.5
+                           cluster.resolution = 0.5,
+                           my_random_seed = 42,
+                           umap.method = "uwot"
                            ){
   data.list <- SplitObject(s.obj, split.by = "name")
   
@@ -35,12 +37,13 @@ s8.integration.and.clustering <- function(s.obj,
   
   s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name="INTE_PCA")
   
-  s.obj <- RunUMAP(s.obj, reduction = "INTE_PCA", dims = 1:num.PCA, reduction.name="INTE_UMAP")
+  s.obj <- RunUMAP(s.obj, reduction = "INTE_PCA", dims = 1:num.PCA, reduction.name="INTE_UMAP",
+                   seed.use = my_random_seed, umap.method = umap.method)
   
   # clustering 
   s.obj <- FindNeighbors(s.obj, reduction = "INTE_PCA", dims = 1:num.dim.cluster)
   
-  s.obj <- FindClusters(s.obj, resolution = cluster.resolution)
+  s.obj <- FindClusters(s.obj, resolution = cluster.resolution, random.seed = 0)
   
   if (save.RDS.s8 == TRUE){
     dir.create(file.path(path.to.output, "s8_output"), showWarnings = FALSE)

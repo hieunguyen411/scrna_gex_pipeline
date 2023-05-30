@@ -6,7 +6,8 @@ s1.input.raw.data <- function(path2input,
                               MINGENES, 
                               PROJECT,
                               save.RDS.s1,
-                              path.to.output){
+                              path.to.output, 
+                              remove_XY_genes = remove_XY_genes){
   #' Function to read in the raw input data. The data is assumed to have the 
   #' CellRanger output format. 
   #'
@@ -25,7 +26,13 @@ s1.input.raw.data <- function(path2input,
   all_exprs <- Sys.glob(file.path(path2input, "*"))
   
   # assign folder names as name of the experiment data. 
-  names(all_exprs) <- to_vec(for(exprs in all_exprs) basename(exprs)) 
+  convert_sample_names <- hash()
+  
+  convert_sample_names[["OMM9"]] <- "OMM9"
+  convert_sample_names[["E.coli"]] <- "E.coli"
+  convert_sample_names[["Delta_flic"]] <- sprintf("%sfliC", "\U0394")
+  
+  names(all_exprs) <- to_vec(for(exprs in all_exprs) convert_sample_names[[basename(exprs)]]) 
   
   # print(paste0("Number of scRNA experiments in this dataset: ", length(all_exprs)))
   
@@ -33,12 +40,10 @@ s1.input.raw.data <- function(path2input,
   
   for (i in seq_along(all_exprs)){
     path_to_expr <- all_exprs[i]
+    input.data <- Read10X(path_to_expr) 
     
-    input.data <- read.table(file.path(path_to_expr, "raw_expression_matrix.txt"), sep = "\t", header = TRUE)
-    input.data<- input.data[!duplicated(input.data$Gene.ID), ]
-    
-    row.names(input.data) <- input.data$Gene.ID
-    input.data <- subset(input.data, select = -c(Gene.ID))
+    keep.genes <- to_vec(for (item in row.names(input.data)) if (item %in% remove_XY_genes == FALSE) item)
+    input.data <- input.data[keep.genes, ]
     expr.name <- names(all_exprs)[i]
     
     s.obj <- CreateSeuratObject(counts = input.data , 
@@ -47,7 +52,7 @@ s1.input.raw.data <- function(path2input,
                                 project = PROJECT)
     
     s.obj@meta.data[, "name"] <- expr.name
-    s.obj@meta.data[, "stage"] <- stage_lst[[expr.name]]
+    s.obj@meta.data[, "stage"] <- stage_lst[expr.name]
     
     # estimate the percentage of mapped reads to Mitochondrial and Ribosome genes
     s.obj[["percent.mt"]] <- PercentageFeatureSet(s.obj, 
@@ -75,6 +80,8 @@ s1.input.raw.data <- function(path2input,
   s.obj@tools[["meta_order"]] <- list(name = names(all_exprs), 
                                       stage=unique(stage_lst))
   
+  s.obj$name <- factor(s.obj$name, levels = c("OMM9", "E.coli", sprintf("%sfliC", "\U0394")))
+  
   all.QC <- list()
   
   # Number of cells obtained per experiment/sample
@@ -88,7 +95,7 @@ s1.input.raw.data <- function(path2input,
   
   # distribution of number of UMI in each sample
   all.QC$nCountRNA.distribution <- ggplot(s.obj@meta.data,
-                                          aes(color=name, x=nCount_RNA, fill = name)) + 
+                                          aes(color=name, x=nCount_RNA, fill = name, y = ..scaled..)) + 
     geom_density(alpha = 0.2) +
     scale_x_log10() +
     theme_classic() +
@@ -100,7 +107,7 @@ s1.input.raw.data <- function(path2input,
   
   # distribution of number of features (genes detected) in each sample
   all.QC$nFeature_RNA.distribution <- ggplot(s.obj@meta.data,
-                                             aes(color=name, x=nFeature_RNA, fill = name)) + 
+                                             aes(color=name, x=nFeature_RNA, fill = name, y = ..scaled..)) + 
     geom_density(alpha = 0.2) +
     scale_x_log10() +
     theme_classic() +
@@ -178,8 +185,3 @@ s1.input.raw.data <- function(path2input,
   
   return(s.obj)
 }
-
-
-
-
-

@@ -58,7 +58,13 @@ run_pipeline_GEX <- function(path2src,
                          my_random_seed = 42,
                          umap.method = "uwot",
                          ambientRNA_thres = 0.5,
-                         path.to.renv = NULL){
+                         path.to.renv = NULL,
+                         features_to_regressOut=NULL,
+                         regressOut_mode="alternative",
+                         num.dim.integration=30,
+                         num.dim.cluster=30,
+                         remove_XY_genes,
+                         with.VDJ){
   
   # load renv.lock file
   # require(renv)
@@ -81,14 +87,19 @@ run_pipeline_GEX <- function(path2src,
   # Save SessionIinfo to human readable file
   writeLines(capture.output(sessionInfo()), file.path(path.to.output, sprintf("%s_sessionInfo.txt", PROJECT)))
   
-  log.file <- sprintf(file.path(path.to.logfile.dir, sprintf("/%s_%s.log", PROJECT, Sys.time())))
-  parameter.log.file <- sprintf(file.path(path.to.logfile.dir, sprintf("/%s_%s.parameter.log", PROJECT, Sys.time())))
+  log.file <- sprintf(file.path(path.to.logfile.dir, sprintf("%s_%s.log", PROJECT, Sys.time())))
+  log.file <- str_replace_all(log.file, ":", "_")
+  log.file <- str_replace(log.file, " ", "_")
+  
+  parameter.log.file <- sprintf(file.path(path.to.logfile.dir, sprintf("%s_%s.parameter.log", PROJECT, Sys.time())))
+  parameter.log.file <- str_replace_all(parameter.log.file, ":", "_")
+  parameter.log.file <- str_replace(parameter.log.file, " ", "_")
   
   write(sprintf("LOG FILE GENERATED ON %s \n", Sys.time()), file=parameter.log.file, append=TRUE)
   
-  if ((sw[["s9"]] == "on") & (length(stage_lst) == 1)){
+  if ((sw[["s8"]] == "on") & (length(stage_lst) == 1)){
     write(sprintf("There is only 1 sample in the input data, turn off INTEGRATION AND CLUSTERING process..."), file=parameter.log.file, append=TRUE)
-    sw[["s9"]] <- "off"
+    sw[["s8"]] <- "off"
   }
   
   write("\n \n ########## ALL INPUT PARAMETERS ########## \n", file=parameter.log.file, append=TRUE)
@@ -130,8 +141,27 @@ run_pipeline_GEX <- function(path2src,
                                      MINGENES = MINGENES,
                                      PROJECT = PROJECT,
                                      save.RDS.s1 = save.RDS[["s1"]],
-                                     path.to.output = path.to.output)
+                                     path.to.output = path.to.output,
+                                     path.to.anno.contigs=path.to.anno.contigs,
+                                     path.to.count.clonaltype=path.to.count.clonaltype,
+                                     with.VDJ=with.VDJ)
           write("Using source file from s1_preprocessing_QC.R", 
+                file=log.file, 
+                append=TRUE)
+          
+        } else if (input.method == "normal_with_added_VDJ"){
+          source(file.path(path2src, "s1_preprocessing_QC_normal_with_VDJ.R"))
+          s.obj <- s1.input.raw.data(path2input = path2input, 
+                                     stage_lst = stage_lst, 
+                                     MINCELLS = MINCELLS, 
+                                     MINGENES = MINGENES,
+                                     PROJECT = PROJECT,
+                                     save.RDS.s1 = save.RDS[["s1"]],
+                                     path.to.output = path.to.output,
+                                     path.to.anno.contigs = path.to.anno.contigs,
+                                     path.to.count.clonaltype = path.to.count.clonaltype,
+                                     filtered.barcodes = filtered.barcodes)
+          write("Using source file from s1_preprocessing_QC_normal_with_VDJ.R", 
                 file=log.file, 
                 append=TRUE)
           
@@ -231,11 +261,109 @@ run_pipeline_GEX <- function(path2src,
           write("Using source file from s1_preprocessing_QC_modified_filterIg.R", 
                 file=log.file, 
                 append=TRUE)
+        } else if (input.method == "filterTRAB_with_hashtag_Antibody"){
+          source(file.path(path2src, "s1_preprocessing_QC_modified_filterTRAB_with_hastagAntibody.R"))
+          s.obj <- s1.input.raw.data(path2input = path2input, 
+                                     stage_lst = stage_lst, 
+                                     MINCELLS = MINCELLS, 
+                                     MINGENES = MINGENES,
+                                     PROJECT = PROJECT,
+                                     save.RDS.s1 = save.RDS[["s1"]],
+                                     path.to.output = path.to.output, 
+                                     path.to.anno.contigs = path.to.anno.contigs,
+                                     path.to.count.clonaltype = path.to.count.clonaltype,
+                                     filtered.barcodes = filtered.barcodes)
+          write("Using source file from s1_preprocessing_QC_modified_filterTRAB_with_hastagAntibody.R", 
+                file=log.file, 
+                append=TRUE)
+        } else if (input.method == "filterTCR_BCR_with_hashtag_Antibody") {
+          source(file.path(path2src, "s1_preprocessing_QC_modified_filterTRAB_BCR_with_hastagAntibody.R"))
+          s.obj <- s1.input.raw.data(path2input = path2input, 
+                                     stage_lst = stage_lst, 
+                                     MINCELLS = MINCELLS, 
+                                     MINGENES = MINGENES,
+                                     PROJECT = PROJECT,
+                                     save.RDS.s1 = save.RDS[["s1"]],
+                                     path.to.output = path.to.output, 
+                                     path.to.anno.contigs = path.to.anno.contigs,
+                                     path.to.count.clonaltype = path.to.count.clonaltype,
+                                     filtered.barcodes = filtered.barcodes)
+          write("Using source file from s1_preprocessing_QC_modified_filterTRAB_BCR_with_hastagAntibody.R", 
+                file=log.file, 
+                append=TRUE)
+        } else if (input.method == "readH5") {
+          source(file.path(path2src, "s1_preprocessing_QC_readH5.R"))
+          s.obj <- s1.input.raw.data(path2input = path2input, 
+                                     stage_lst = stage_lst, 
+                                     MINCELLS = MINCELLS, 
+                                     MINGENES = MINGENES,
+                                     PROJECT = PROJECT,
+                                     save.RDS.s1 = save.RDS[["s1"]],
+                                     path.to.output = path.to.output, 
+                                     path.to.anno.contigs = path.to.anno.contigs,
+                                     path.to.count.clonaltype = path.to.count.clonaltype,
+                                     filtered.barcodes = filtered.barcodes)
+          write("Using source file from s1_preprocessing_QC_readH5.R", 
+                file=log.file, 
+                append=TRUE)
+        } else if (input.method == "remove_XY_genes"){
+          source(file.path(path2src, "s1_preprocessing_QC_remove_XY_genes.R"))
+          s.obj <- s1.input.raw.data(path2input = path2input, 
+                                     stage_lst = stage_lst, 
+                                     MINCELLS = MINCELLS, 
+                                     MINGENES = MINGENES,
+                                     PROJECT = PROJECT,
+                                     save.RDS.s1 = save.RDS[["s1"]],
+                                     path.to.output = path.to.output,
+                                     remove_XY_genes = remove_XY_genes)
+          write("Using source file from s1_preprocessing_QC_remove_XY_genes.R", 
+                file=log.file, 
+                append=TRUE)
+        } else if (input.method == "normal_with_hashtag_antibodies"){
+          source(file.path(path2src, "s1_preprocessing_QC_with_hastagAntibody.R"))
+          s.obj <- s1.input.raw.data(path2input = path2input, 
+                                     stage_lst = stage_lst, 
+                                     MINCELLS = MINCELLS, 
+                                     MINGENES = MINGENES,
+                                     PROJECT = PROJECT,
+                                     save.RDS.s1 = save.RDS[["s1"]],
+                                     path.to.output = path.to.output, 
+                                     path.to.anno.contigs = path.to.anno.contigs,
+                                     path.to.count.clonaltype = path.to.count.clonaltype,
+                                     filtered.barcodes = filtered.barcodes)
+          write("Using source file from s1_preprocessing_QC_with_hastagAntibody.R", 
+                file=log.file, 
+                append=TRUE)
+        } else if (input.method == "filterTRAB_rename_mm10_genes"){
+          source(file.path(path2src, "s1_preprocessing_QC_modified_filterTRAB_rename_mm10_genes.R"))
+          s.obj <- s1.input.raw.data(path2input = path2input, 
+                                     stage_lst = stage_lst, 
+                                     MINCELLS = MINCELLS, 
+                                     MINGENES = MINGENES,
+                                     PROJECT = PROJECT,
+                                     save.RDS.s1 = save.RDS[["s1"]],
+                                     path.to.output = path.to.output, 
+                                     path.to.anno.contigs = path.to.anno.contigs,
+                                     path.to.count.clonaltype = path.to.count.clonaltype,
+                                     filtered.barcodes = filtered.barcodes)
+          
+        } else if (input.method == "filterTRABGD_with_hashtag_Antibody"){
+          source(file.path(path2src, "s1_preprocessing_QC_modified_filterTRABGD_with_hastagAntibody.R"))
+          s.obj <- s1.input.raw.data(path2input = path2input, 
+                                     stage_lst = stage_lst, 
+                                     MINCELLS = MINCELLS, 
+                                     MINGENES = MINGENES,
+                                     PROJECT = PROJECT,
+                                     save.RDS.s1 = save.RDS[["s1"]],
+                                     path.to.output = path.to.output, 
+                                     path.to.anno.contigs = path.to.anno.contigs,
+                                     path.to.count.clonaltype = path.to.count.clonaltype,
+                                     filtered.barcodes = filtered.barcodes)
         }
 
         status.message <- sprintf("New output is saved at %s", file.path(path.to.output, "s1_output", sprintf("%s.output.s1.rds", PROJECT)))
         
-        }else {
+        } else {
         s.obj <- readRDS(file.path(path.to.output, "s1_output", sprintf("%s.output.s1.rds", PROJECT)))
         status.message <- sprintf("Seurat object was loaded from %s", file.path(path.to.output, "s1_output", sprintf("%s.output.s1.rds", PROJECT)))
       }
@@ -388,7 +516,9 @@ run_pipeline_GEX <- function(path2src,
       s.obj <- s7.cellFactorRegressOut(s.obj,
                                    path.to.output,
                                    save.RDS[["s7"]],
-                                   PROJECT = PROJECT)
+                                   PROJECT = PROJECT, 
+                                   features_to_regressOut = features_to_regressOut,
+                                   regressOut_mode = regressOut_mode)
       
       status.message <- sprintf("New output is saved at %s", file.path(path.to.output, "s7_output", sprintf("%s.output.s7.rds", PROJECT)))
       
@@ -408,10 +538,16 @@ run_pipeline_GEX <- function(path2src,
     if (rerun[["s8"]] == TRUE | file.exists(file.path(path.to.output, "s8_output", sprintf("%s.output.s8.rds", PROJECT)))  == FALSE){
       print("Running process S8: Running integration and clustering ...")
       
-      s.obj <- s8.integration.and.clustering( s.obj, 
-                                              path.to.output, 
-                                              save.RDS[["s8"]],
-                                              PROJECT)
+      s.obj <- s8.integration.and.clustering(s.obj, 
+                                             path.to.output, 
+                                             save.RDS[["s8"]],
+                                             PROJECT, 
+                                             num.dim.integration,
+                                             num.PCA,
+                                             num.dim.cluster,
+                                             cluster.resolution,
+                                             my_random_seed,
+                                             umap.method)
       
       status.message <- sprintf("New output is saved at %s", file.path(path.to.output, "s8_output", sprintf("%s.output.s8.rds", PROJECT)))
       

@@ -45,7 +45,8 @@ s4.DoubletDetection <- function(s.obj,
   
   # a little helper function to run Doulbet detection ----------------------------
   run.Doublet.Detection <- function(s.obj, doublet_formation_rate, pN = 0.25, pK = 9.09){
-    obj.name <- names(table(s.obj$name))
+    # obj.name <- names(table(s.obj$name))
+    obj.name <- unique(s.obj$name)
     nExp_poi <- doublet_formation_rate[[obj.name]]
     tmp <- doubletFinder_v3(s.obj, PCs = 1:10, pN = pN, pK = pK, nExp = nExp_poi, reuse.pANN = FALSE, sct = FALSE)
     tmp[["classifications"]] <- factor(tmp[[paste("DF.classifications", pN, pK, nExp_poi, sep = "_")]][,1],

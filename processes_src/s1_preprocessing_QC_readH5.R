@@ -33,12 +33,7 @@ s1.input.raw.data <- function(path2input,
   
   for (i in seq_along(all_exprs)){
     path_to_expr <- all_exprs[i]
-    
-    input.data <- read.table(file.path(path_to_expr, "raw_expression_matrix.txt"), sep = "\t", header = TRUE)
-    input.data<- input.data[!duplicated(input.data$Gene.ID), ]
-    
-    row.names(input.data) <- input.data$Gene.ID
-    input.data <- subset(input.data, select = -c(Gene.ID))
+    input.data <- Read10X_h5(path_to_expr) 
     expr.name <- names(all_exprs)[i]
     
     s.obj <- CreateSeuratObject(counts = input.data , 
@@ -47,7 +42,7 @@ s1.input.raw.data <- function(path2input,
                                 project = PROJECT)
     
     s.obj@meta.data[, "name"] <- expr.name
-    s.obj@meta.data[, "stage"] <- stage_lst[[expr.name]]
+    s.obj@meta.data[, "stage"] <- stage_lst[expr.name]
     
     # estimate the percentage of mapped reads to Mitochondrial and Ribosome genes
     s.obj[["percent.mt"]] <- PercentageFeatureSet(s.obj, 
@@ -178,8 +173,3 @@ s1.input.raw.data <- function(path2input,
   
   return(s.obj)
 }
-
-
-
-
-

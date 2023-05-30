@@ -6,7 +6,10 @@ s1.input.raw.data <- function(path2input,
                               MINGENES, 
                               PROJECT,
                               save.RDS.s1,
-                              path.to.output){
+                              path.to.output,
+                              filtered.barcodes = NULL,
+                              path.to.anno.contigs = NULL,
+                              path.to.count.clonaltype = NULL){
   #' Function to read in the raw input data. The data is assumed to have the 
   #' CellRanger output format. 
   #'
@@ -33,12 +36,7 @@ s1.input.raw.data <- function(path2input,
   
   for (i in seq_along(all_exprs)){
     path_to_expr <- all_exprs[i]
-    
-    input.data <- read.table(file.path(path_to_expr, "raw_expression_matrix.txt"), sep = "\t", header = TRUE)
-    input.data<- input.data[!duplicated(input.data$Gene.ID), ]
-    
-    row.names(input.data) <- input.data$Gene.ID
-    input.data <- subset(input.data, select = -c(Gene.ID))
+    input.data <- Read10X(path_to_expr) 
     expr.name <- names(all_exprs)[i]
     
     s.obj <- CreateSeuratObject(counts = input.data , 
@@ -47,7 +45,7 @@ s1.input.raw.data <- function(path2input,
                                 project = PROJECT)
     
     s.obj@meta.data[, "name"] <- expr.name
-    s.obj@meta.data[, "stage"] <- stage_lst[[expr.name]]
+    s.obj@meta.data[, "stage"] <- stage_lst[expr.name]
     
     # estimate the percentage of mapped reads to Mitochondrial and Ribosome genes
     s.obj[["percent.mt"]] <- PercentageFeatureSet(s.obj, 
@@ -176,10 +174,25 @@ s1.input.raw.data <- function(path2input,
                              paste0(PROJECT, ".output.s1.rds")))
   }
   
+  ##############################################################################
+  # __________ ADD CLONAL TYPE INFORMATION __________
+  if (is.null(path.to.anno.contigs) == FALSE){
+    anno.contigs <- read.csv(path.to.anno.contigs)
+    
+    count.clonaltype <- read.csv(path.to.count.clonaltype)
+    
+    anno.contigs <- anno.contigs %>% 
+      rowwise %>% 
+      mutate(barcode = sprintf("%s_%s", sample, tail(unlist(str_split(barcode, pattern = "_")), 1)))
+    
+    combined.metadata <- merge(slot(s.obj, "meta.data"), anno.contigs, 
+                               by.x = 0, by.y = "barcode", all = TRUE)
+    
+    combined.metadata <- subset(combined.metadata, combined.metadata$Row.names %in% row.names(s.obj@meta.data))
+    
+    s.obj <- AddMetaData(object = s.obj, metadata = combined.metadata$CTaa,
+                         col.name = "CTaa")
+  }
+  
   return(s.obj)
 }
-
-
-
-
-

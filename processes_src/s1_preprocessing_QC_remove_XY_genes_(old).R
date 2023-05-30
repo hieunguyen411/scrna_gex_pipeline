@@ -6,7 +6,8 @@ s1.input.raw.data <- function(path2input,
                               MINGENES, 
                               PROJECT,
                               save.RDS.s1,
-                              path.to.output){
+                              path.to.output, 
+                              remove_XY_genes = remove_XY_genes){
   #' Function to read in the raw input data. The data is assumed to have the 
   #' CellRanger output format. 
   #'
@@ -33,12 +34,10 @@ s1.input.raw.data <- function(path2input,
   
   for (i in seq_along(all_exprs)){
     path_to_expr <- all_exprs[i]
+    input.data <- Read10X(path_to_expr) 
     
-    input.data <- read.table(file.path(path_to_expr, "raw_expression_matrix.txt"), sep = "\t", header = TRUE)
-    input.data<- input.data[!duplicated(input.data$Gene.ID), ]
-    
-    row.names(input.data) <- input.data$Gene.ID
-    input.data <- subset(input.data, select = -c(Gene.ID))
+    keep.genes <- to_vec(for (item in row.names(input.data)) if (item %in% remove_XY_genes == FALSE) item)
+    input.data <- input.data[keep.genes, ]
     expr.name <- names(all_exprs)[i]
     
     s.obj <- CreateSeuratObject(counts = input.data , 
@@ -47,7 +46,7 @@ s1.input.raw.data <- function(path2input,
                                 project = PROJECT)
     
     s.obj@meta.data[, "name"] <- expr.name
-    s.obj@meta.data[, "stage"] <- stage_lst[[expr.name]]
+    s.obj@meta.data[, "stage"] <- stage_lst[expr.name]
     
     # estimate the percentage of mapped reads to Mitochondrial and Ribosome genes
     s.obj[["percent.mt"]] <- PercentageFeatureSet(s.obj, 
@@ -88,7 +87,7 @@ s1.input.raw.data <- function(path2input,
   
   # distribution of number of UMI in each sample
   all.QC$nCountRNA.distribution <- ggplot(s.obj@meta.data,
-                                          aes(color=name, x=nCount_RNA, fill = name)) + 
+                                          aes(color=name, x=nCount_RNA, fill = name, y = ..scaled..)) + 
     geom_density(alpha = 0.2) +
     scale_x_log10() +
     theme_classic() +
@@ -100,7 +99,7 @@ s1.input.raw.data <- function(path2input,
   
   # distribution of number of features (genes detected) in each sample
   all.QC$nFeature_RNA.distribution <- ggplot(s.obj@meta.data,
-                                             aes(color=name, x=nFeature_RNA, fill = name)) + 
+                                             aes(color=name, x=nFeature_RNA, fill = name, y = ..scaled..)) + 
     geom_density(alpha = 0.2) +
     scale_x_log10() +
     theme_classic() +
@@ -159,7 +158,7 @@ s1.input.raw.data <- function(path2input,
     mutate(log10GenesPerUMI = log10(nFeature_RNA) / log10(nCount_RNA))
   
   all.QC$complexity <- ggplot(s.obj@meta.data,
-                              aes(x=log10GenesPerUMI, color = name, fill=name)) +
+                              aes(x=log10GenesPerUMI, color = name, fill=name, y = ..scaled..)) +
     geom_density(alpha = 0.2) +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) +
@@ -169,6 +168,7 @@ s1.input.raw.data <- function(path2input,
   
   # add new slot for all.QC into the existed SEURAT OBJECT. 
   s.obj@misc$all.QC <- all.QC
+  
   if (save.RDS.s1 == TRUE){
     dir.create(file.path(path.to.output, "s1_output"), showWarnings = FALSE)
     saveRDS(object = s.obj, 
@@ -178,8 +178,3 @@ s1.input.raw.data <- function(path2input,
   
   return(s.obj)
 }
-
-
-
-
-

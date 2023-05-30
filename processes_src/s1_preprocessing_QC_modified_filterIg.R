@@ -222,8 +222,12 @@ s1.input.raw.data <- function(path2input,
     
     combined.metadata <- subset(combined.metadata, combined.metadata$Row.names %in% row.names(s.obj@meta.data))
     
-    s.obj <- AddMetaData(object = s.obj, metadata = combined.metadata$CTaa,
-                         col.name = "CTaa")
+    # add all information we have from the annotated_contigs_clonaltype file 
+    # obtained from the VDJ pipeline
+    for (col in c("IGH","cdr3_aa1", "cdr3_nt1", "IGLC", "cdr3_aa2", "cdr3_nt2", "CTgene", "CTnt", "CTaa", "CTstrict")){
+      s.obj <- AddMetaData(object = s.obj, metadata = combined.metadata[[col]],
+                           col.name = col)
+    }
   }
   
   # save both: before and after filtering the genes

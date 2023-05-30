@@ -36,8 +36,8 @@ s1.input.raw.data <- function(path2input,
     input.data <- Read10X(path_to_expr)
     
     count.data <- input.data$`Gene Expression`
-    count.adt <- input.data$`Antibody Capture`
-    
+    # count.adt <- input.data$`Antibody Capture`
+    count.adt <- input.data[[names(input.data)[[2]]]]
     expr.name <- names(all_exprs)[i]
     
     s.obj <- CreateSeuratObject(counts = count.data, 
@@ -98,7 +98,7 @@ s1.input.raw.data <- function(path2input,
   
   # distribution of number of UMI in each sample
   all.QC$nCountRNA.distribution <- ggplot(s.obj@meta.data,
-                                          aes(color=name, x=nCount_RNA, fill = name)) + 
+                                          aes(color=name, x=nCount_RNA, fill = name, y = ..scaled..)) + 
     geom_density(alpha = 0.2) +
     scale_x_log10() +
     theme_classic() +
@@ -110,7 +110,7 @@ s1.input.raw.data <- function(path2input,
   
   # distribution of number of features (genes detected) in each sample
   all.QC$nFeature_RNA.distribution <- ggplot(s.obj@meta.data,
-                                             aes(color=name, x=nFeature_RNA, fill = name)) + 
+                                             aes(color=name, x=nFeature_RNA, fill = name, y = ..scaled..)) + 
     geom_density(alpha = 0.2) +
     scale_x_log10() +
     theme_classic() +

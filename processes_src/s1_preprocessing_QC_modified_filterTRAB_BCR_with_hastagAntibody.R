@@ -6,7 +6,10 @@ s1.input.raw.data <- function(path2input,
                               MINGENES, 
                               PROJECT,
                               save.RDS.s1,
-                              path.to.output){
+                              path.to.output,
+                              filtered.barcodes = NULL,
+                              path.to.anno.contigs = NULL,
+                              path.to.count.clonaltype = NULL){
   #' Function to read in the raw input data. The data is assumed to have the 
   #' CellRanger output format. 
   #'
@@ -33,27 +36,58 @@ s1.input.raw.data <- function(path2input,
   
   for (i in seq_along(all_exprs)){
     path_to_expr <- all_exprs[i]
+    input.data <- Read10X(path_to_expr) 
     
-    input.data <- read.table(file.path(path_to_expr, "raw_expression_matrix.txt"), sep = "\t", header = TRUE)
-    input.data<- input.data[!duplicated(input.data$Gene.ID), ]
+    count.data <- input.data$`Gene Expression`
+    count.adt <- input.data$`Antibody Capture`
     
-    row.names(input.data) <- input.data$Gene.ID
-    input.data <- subset(input.data, select = -c(Gene.ID))
+    ##### remove genes 
+    # nonzero <- count.data > 0
+    # count_cells_per_gene <- Matrix::rowSums(nonzero)
+    # keep_genes <- Matrix::rowSums(nonzero) >= MINCELLS
+    # count.data <- count.data[keep_genes, ]
+    
+    ##### remove some TRA/TRB/Ig (TCR and BCR) genes --------------------------------------------
+    TR_genes_patterns <- c("Trav", "Traj", "Trac", "Trbv", "Trbd", "Trbj", "Trbc") 
+    BR_genes_patterns <- c("Ighv", "Ighd", "Ighj", "Ighc", "Igkv", "Igkj", "Igkc", "Iglv", "Iglj", "Iglc") 
+  
+    all_genes <- row.names(count.data)
+    
+    genes.to.exclude <- unlist(lapply(all_genes, function(x){
+      if (substr(x, 1, 4) %in% c(TR_genes_patterns, BR_genes_patterns)){
+        return(x)
+      } else {
+        return(NA)
+      }
+    }))
+
+    genes.to.exclude <- subset(genes.to.exclude, is.na(genes.to.exclude) == FALSE)
+  
+    count.data <- count.data[-(which(rownames(count.data) %in% genes.to.exclude)),]
+    ##### FINISH remove some TRA/TRB genes -------------------------------------
+    
     expr.name <- names(all_exprs)[i]
-    
-    s.obj <- CreateSeuratObject(counts = input.data , 
+    s.obj <- CreateSeuratObject(counts = count.data, 
                                 min.cells = MINCELLS, 
                                 min.features = MINGENES, 
                                 project = PROJECT)
     
     s.obj@meta.data[, "name"] <- expr.name
-    s.obj@meta.data[, "stage"] <- stage_lst[[expr.name]]
+    s.obj@meta.data[, "stage"] <- stage_lst[expr.name]
     
     # estimate the percentage of mapped reads to Mitochondrial and Ribosome genes
     s.obj[["percent.mt"]] <- PercentageFeatureSet(s.obj, 
                                                   pattern = "^mt-|^MT-")
     s.obj[["percent.ribo"]] <- PercentageFeatureSet(s.obj, 
                                                     pattern = "^Rpl|^Rps|^RPL|^RPS")
+    
+    new.count.data <- GetAssayData(s.obj)
+    
+    count.adt <- count.adt[, colnames(new.count.data)]
+    
+    adt_assay <- CreateAssayObject(counts = count.adt)
+    s.obj[["ADT"]] <- adt_assay
+    
     data.list[[i]] <- s.obj
     
     # clean up
@@ -74,6 +108,13 @@ s1.input.raw.data <- function(path2input,
   
   s.obj@tools[["meta_order"]] <- list(name = names(all_exprs), 
                                       stage=unique(stage_lst))
+  
+  # Filter barcodes, only apply in round 2 analysis
+  if (is.null(filtered.barcodes) == FALSE){
+    all_cells <- colnames(s.obj)
+    cells.to.keep <- subset(all_cells, all_cells %in% filtered.barcodes == FALSE)
+    s.obj <- subset(s.obj, cells = cells.to.keep)
+  }
   
   all.QC <- list()
   
@@ -96,6 +137,7 @@ s1.input.raw.data <- function(path2input,
     theme(plot.title = element_text(hjust=0.5, face="bold", size = 14)) +
     ylab("Cell density") +
     geom_vline(xintercept = 500, color = "red") +
+    xlim(0, 40000) + 
     ggtitle("Distribution of read depths in each sample")
   
   # distribution of number of features (genes detected) in each sample
@@ -108,7 +150,7 @@ s1.input.raw.data <- function(path2input,
     theme(plot.title = element_text(hjust=0.5, face="bold", size = 14)) +
     ylab("Cell density") +
     geom_vline(xintercept = 1000, color = "red") +
-    xlim(1000, 10000) +
+    xlim(0, 10000) +
     ggtitle("Distribution of number of detected genes in each sample")
   
   
@@ -169,17 +211,37 @@ s1.input.raw.data <- function(path2input,
   
   # add new slot for all.QC into the existed SEURAT OBJECT. 
   s.obj@misc$all.QC <- all.QC
+  
+  ##############################################################################
+  # __________ ADD CLONAL TYPE INFORMATION __________
+  if (is.null(path.to.anno.contigs) == FALSE){
+    anno.contigs <- read.csv(path.to.anno.contigs)
+    
+    count.clonaltype <- read.csv(path.to.count.clonaltype)
+    
+    anno.contigs <- anno.contigs %>% 
+      rowwise %>% 
+      mutate(barcode = sprintf("%s_%s", sample, tail(unlist(str_split(barcode, pattern = "_")), 1)))
+    
+    combined.metadata <- merge(slot(s.obj, "meta.data"), anno.contigs, 
+                               by.x = 0, by.y = "barcode", all = TRUE)
+    
+    combined.metadata <- subset(combined.metadata, combined.metadata$Row.names %in% row.names(s.obj@meta.data))
+    
+    s.obj <- AddMetaData(object = s.obj, metadata = combined.metadata$CTaa,
+                         col.name = "CTaa")
+  }
+  
+  # save both: before and after filtering the genes
   if (save.RDS.s1 == TRUE){
     dir.create(file.path(path.to.output, "s1_output"), showWarnings = FALSE)
     saveRDS(object = s.obj, 
             file = file.path(path.to.output, "s1_output", 
                              paste0(PROJECT, ".output.s1.rds")))
+    saveRDS(object = genes.to.exclude,
+            file = file.path(path.to.output, "s1_output", 
+                             paste0(PROJECT, "genes_to_be_excluded.rds")))
   }
-  
   return(s.obj)
 }
-
-
-
-
 

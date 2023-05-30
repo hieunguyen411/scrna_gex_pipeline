@@ -93,7 +93,7 @@ s1.input.raw.data <- function(path2input,
   
   # distribution of number of UMI in each sample
   all.QC$nCountRNA.distribution <- ggplot(s.obj@meta.data,
-                                          aes(color=name, x=nCount_RNA, fill = name)) + 
+                                          aes(color=name, x=nCount_RNA, fill = name, y = ..scaled..)) + 
     geom_density(alpha = 0.2) +
     scale_x_log10() +
     theme_classic() +
@@ -105,7 +105,7 @@ s1.input.raw.data <- function(path2input,
   
   # distribution of number of features (genes detected) in each sample
   all.QC$nFeature_RNA.distribution <- ggplot(s.obj@meta.data,
-                                             aes(color=name, x=nFeature_RNA, fill = name)) + 
+                                             aes(color=name, x=nFeature_RNA, fill = name, y = ..scaled..)) + 
     geom_density(alpha = 0.2) +
     scale_x_log10() +
     theme_classic() +
