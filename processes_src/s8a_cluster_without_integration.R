@@ -7,11 +7,16 @@ s8a.cluster.wo.integration <- function(s.obj,
                                       num.PC.used.in.Clustering,
                                       cluster.resolution = 0.5,
                                       my_random_seed = 42,
-                                      umap.method = "uwot"){
+                                      umap.method = "uwot",
+                                      genes.to.run.PCA = NULL){
   chosen.assay <- "RNA"
   DefaultAssay(s.obj) <- chosen.assay
   
-  s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name=sprintf("%s_PCA", chosen.assay))
+  if (is.null(genes.to.run.PCA) == TRUE){
+    s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name=sprintf("%s_PCA", chosen.assay))
+  } else {
+    s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name=sprintf("%s_PCA", chosen.assay), features = genes.to.run.PCA)
+  }
   
   s.obj <- RunUMAP(s.obj, reduction = sprintf("%s_PCA", chosen.assay), 
                    dims = 1:num.PC.used.in.UMAP, reduction.name=sprintf("%s_UMAP", chosen.assay),

@@ -7,7 +7,8 @@ s8.integration.and.clustering <- function(s.obj,
                            num.dim.cluster,
                            cluster.resolution = 0.5,
                            my_random_seed = 42,
-                           umap.method = "uwot"
+                           umap.method = "uwot",
+                           genes.to.run.PCA = NULL,
                            ){
   data.list <- SplitObject(s.obj, split.by = "name")
   
@@ -35,9 +36,13 @@ s8.integration.and.clustering <- function(s.obj,
   
   s.obj <- ScaleData(s.obj, verbose = FALSE, features = row.names(s.obj))
   
-  s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name="INTE_PCA")
+  if (is.null(genes.to.run.PCA) == TRUE){
+    s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name="INTE_PCA")
+  } else {
+    s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name="INTE_PCA", features = genes.to.run.PCA)
+  }
   
-  s.obj <- RunUMAP(s.obj, reduction = "INTE_PCA", dims = 1:num.PCA, reduction.name="INTE_UMAP",
+  s.obj <- RunUMAP(s.obj, reduction = "INTE_PCA", dims = 1:num.PCA, reduction.name="INTE_UMAP", 
                    seed.use = my_random_seed, umap.method = umap.method)
   
   # clustering 
