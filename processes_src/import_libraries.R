@@ -28,7 +28,8 @@ bioc.packages <- c("celda",
                    "PCAtools", 
                    "SingleCellExperiment",
                    "scRepertoire", 
-                   "sctransform")
+                   "sctransform", 
+                   "progeny")
 
 # Check if packages are installed ##############################################
 
