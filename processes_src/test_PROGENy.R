@@ -39,4 +39,5 @@ s.obj <- s10.PROGENy_pathway_analysis(s.obj = s.obj,
                                       progeny.params = progeny.params, #
                                       cluster.name = cluster.name, 
                                       save.RDS.s10 = FALSE, 
-                                      PROJECT = PROJECT)
+                                      PROJECT = PROJECT,
+                                      scran_or_seurat = "scran")
