@@ -27,7 +27,7 @@ dir.create(path.to.05.output, showWarnings = FALSE, recursive = TRUE)
 s.obj <- readRDS(file.path(path.to.01.output, "APanyot_dataset.output.s8.recluster_CellType.rds"))
 
 ##### INPUT ARGS
-cluster.name <- "seurat_clusters" # default value
+cluster.name <- "celltype" # default value
 progeny.params <- list(scale = FALSE, 
                       species = "Mouse",
                       top = 500,
@@ -36,7 +36,7 @@ progeny.params <- list(scale = FALSE,
 
 s.obj <- s10.PROGENy_pathway_analysis(s.obj = s.obj, 
                                       path.to.output = ".", 
-                                      progeny.params = progeny.params, #
+                                      progeny.params = progeny.params,
                                       cluster.name = cluster.name, 
                                       save.RDS.s10 = FALSE, 
                                       PROJECT = PROJECT,
