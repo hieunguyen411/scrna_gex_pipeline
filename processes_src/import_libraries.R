@@ -20,7 +20,9 @@ list.of.packages <- c("Seurat",
                       "formattable",
                       "htmlwidgets",
                       "plotly",
-                      "stringr"
+                      "stringr",
+                      "rcompanion",
+                      "argparse"
 )
 
 bioc.packages <- c("celda", 
