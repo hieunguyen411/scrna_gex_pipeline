@@ -42,7 +42,7 @@ new.bioc.packages <- bioc.packages[!(bioc.packages %in% installed.packages()[,"P
 
 # Install new packages #########################################################
 if(length(new.packages)) install.packages(new.packages)
-if(length(new.bioc.packages)) BiocManager::install(new.bioc.packages)
+if(length(new.bioc.packages)) BiocManager::install(new.bioc.packages, update = FALSE, ask = TRUE)
 
 # Import all packages ##########################################################
 package_loading_Status <- lapply(list.of.packages, 
