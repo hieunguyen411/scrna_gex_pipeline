@@ -66,7 +66,9 @@ run_pipeline_GEX <- function(path2src,
                          with.VDJ,
                          genes.to.run.PCA = NULL,
                          inte_pca_reduction_name = "INTE_PCA",
-                         inte_umap_reduction_name = "INTE_UMAP"){
+                         inte_umap_reduction_name = "INTE_UMAP",
+                         pca_reduction_name = NULL,
+                         umap_reduction_name = NULL){
   
   # load renv.lock file
   # require(renv)
@@ -587,7 +589,9 @@ run_pipeline_GEX <- function(path2src,
                                           cluster.resolution,
                                           my_random_seed,
                                           umap.method,
-                                          genes.to.run.PCA)
+                                          genes.to.run.PCA,
+                                          pca_reduction_name,
+                                          umap_reduction_name)
       
       status.message <- sprintf("New output is saved at %s", file.path(path.to.output, "s8a_output", sprintf("%s.output.s8a.rds", PROJECT)))
       
