@@ -118,7 +118,6 @@ num.PCA <- 25
 num.PC.used.in.UMAP <- 25
 num.PC.used.in.Clustering <- 25
 num.dim.integration <- 25
-num.dim.cluster <- 25
 
 # remove_XY_genes <- c("Xist","Jpx","Ftx","Tsx","Cnbp2")
 remove_XY_genes <- NULL
