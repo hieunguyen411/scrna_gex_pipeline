@@ -4,7 +4,8 @@ s8.integration.and.clustering <- function(s.obj,
                            PROJECT, 
                            num.dim.integration,
                            num.PCA,
-                           num.dim.cluster,
+                           num.PC.used.in.UMAP,
+                           num.PC.used.in.Clustering,
                            cluster.resolution = 0.5,
                            my_random_seed = 42,
                            umap.method = "uwot",
@@ -43,11 +44,11 @@ s8.integration.and.clustering <- function(s.obj,
     s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name=inte_pca_reduction_name, features = genes.to.run.PCA)
   }
   
-  s.obj <- RunUMAP(s.obj, reduction = inte_pca_reduction_name, dims = 1:num.PCA, reduction.name=inte_umap_reduction_name, 
+  s.obj <- RunUMAP(s.obj, reduction = inte_pca_reduction_name, dims = 1:num.PC.used.in.UMAP, reduction.name=inte_umap_reduction_name, 
                    seed.use = my_random_seed, umap.method = umap.method)
   
   # clustering 
-  s.obj <- FindNeighbors(s.obj, reduction = inte_pca_reduction_name, dims = 1:num.dim.cluster)
+  s.obj <- FindNeighbors(s.obj, reduction = inte_pca_reduction_name, dims = 1:num.PC.used.in.Clustering)
   
   s.obj <- FindClusters(s.obj, resolution = cluster.resolution, random.seed = 0)
   

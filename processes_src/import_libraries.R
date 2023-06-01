@@ -22,7 +22,9 @@ list.of.packages <- c("Seurat",
                       "plotly",
                       "stringr",
                       "rcompanion",
-                      "argparse"
+                      "argparse",
+                      "scatterpie", 
+                      "scales"
 )
 
 bioc.packages <- c("celda", 
