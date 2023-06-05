@@ -56,10 +56,22 @@ s10.PROGENy_pathway_analysis <- function( s.obj,
     }
     # adjust p-value FDR
     diff.pathways$p_val_adj <- p.adjust(diff.pathways$p.value, method = "fdr")
-    diff.pathways <- subset(diff.pathways, diff.pathways$p_val_adj <= 0.05)
+    # diff.pathways <- subset(diff.pathways, diff.pathways$p_val_adj <= 0.05)
     # keep some informative columns
-    diff.pathways <- subset(diff.pathways, select = c(pathway, p.value, p_val_adj, cluster, summary.logFC))
-    colnames(diff.pathways) <- c("pathway", "p_val", "p_val_adj", "cluster", "logFC")
+    diff.pathways <- subset(diff.pathways, select = c(pathway, p.value, p_val_adj, cluster, summary.logFC, r))
+    colnames(diff.pathways) <- c("pathway", "p_val", "p_val_adj", "cluster", "logFC", "r")
+    diff.pathways$tag <- sapply(diff.pathways$p_val_adj, function(pval) {
+      if(pval< 0.001) {
+        txt <- "***"
+      } else if (pval < 0.01) {
+        txt <- "**"
+      } else if (pval < 0.05) {
+        txt <- "*"
+      } else {
+        txt <- "NS"
+      }
+      return(txt)
+    })
   } else {
     diff.pathways <- FindAllMarkers(s.obj, assay = "progeny", slot = "data", test.use = "wilcox") %>%
       subset(p_val_adj <= 0.05)

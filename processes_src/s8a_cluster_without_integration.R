@@ -19,6 +19,10 @@ s8a.cluster.wo.integration <- function(s.obj,
     s.obj <- RunUMAP(s.obj, reduction = sprintf("%s_PCA", chosen.assay), 
                      dims = 1:num.PC.used.in.UMAP, reduction.name=sprintf("%s_UMAP", chosen.assay),
                      seed.use = my_random_seed, umap.method = "uwot")
+    # clustering 
+    s.obj <- FindNeighbors(s.obj, reduction = sprintf("%s_PCA", chosen.assay), dims = 1:num.PC.used.in.Clustering)
+    s.obj <- FindClusters(s.obj, resolution = cluster.resolution, random.seed = 0)
+    
   } else {
     if(is.null(pca_reduction_name) == TRUE | is.null(umap_reduction_name) == TRUE){
       stop("When genes.to.run.PCA is NULL, pca_reduction_name and umap_reduction_name must be used!")
@@ -27,14 +31,11 @@ s8a.cluster.wo.integration <- function(s.obj,
       s.obj <- RunUMAP(s.obj, reduction = pca_reduction_name, 
                        dims = 1:num.PC.used.in.UMAP, reduction.name = umap_reduction_name,
                        seed.use = my_random_seed, umap.method = "uwot")
+      # clustering 
+      s.obj <- FindNeighbors(s.obj, reduction = pca_reduction_name, dims = 1:num.PC.used.in.Clustering)
+      s.obj <- FindClusters(s.obj, resolution = cluster.resolution, random.seed = 0)
     }
   }
-  
-  # clustering 
-  s.obj <- FindNeighbors(s.obj, reduction = sprintf("%s_PCA", chosen.assay), dims = 1:num.PC.used.in.Clustering)
-  
-  s.obj <- FindClusters(s.obj, 
-                        resolution = cluster.resolution, random.seed = 0)
   
   if (save.RDS.s8a == TRUE){
     dir.create(file.path(path.to.output, "s8a_output"), showWarnings = FALSE)

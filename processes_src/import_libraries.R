@@ -24,7 +24,9 @@ list.of.packages <- c("Seurat",
                       "rcompanion",
                       "argparse",
                       "scatterpie", 
-                      "scales"
+                      "scales",
+                      "rstatix",
+                      "ggpubr"
 )
 
 bioc.packages <- c("celda", 
