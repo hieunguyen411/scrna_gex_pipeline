@@ -42,7 +42,7 @@ s10.PROGENy_pathway_analysis_between_conditions <- function( s.obj,
       as.data.frame() 
     tmp$cluster <- cluster.id
     r <- sapply(all.pathways, 
-                function(pw) rcompanion::wilcoxonR(as.vector(s.obj@assays$progeny@data[pw,]), g))
+                function(pw) rcompanion::wilcoxonR(as.vector(subset.s.obj@assays$progeny@data[pw,]), g))
     names(r) <- to_vec(for (item in names(r)) str_replace(item, "[.]r", "")[[1]][[1]]) 
     tmp[names(r), "r"] <- r
     tmp <- tmp[names(r), ] %>% rownames_to_column("pathway")
