@@ -15,12 +15,12 @@ s8a.cluster.wo.integration <- function(s.obj,
   DefaultAssay(s.obj) <- chosen.assay
   
   if (is.null(genes.to.not.run.PCA) == TRUE){
-    s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name=sprintf("%s_PCA", chosen.assay))
-    s.obj <- RunUMAP(s.obj, reduction = sprintf("%s_PCA", chosen.assay), 
-                     dims = 1:num.PC.used.in.UMAP, reduction.name=sprintf("%s_UMAP", chosen.assay),
+    s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name=pca_reduction_name)
+    s.obj <- RunUMAP(s.obj, reduction = pca_reduction_name, 
+                     dims = 1:num.PC.used.in.UMAP, reduction.name=umap_reduction_name,
                      seed.use = my_random_seed, umap.method = "uwot")
     # clustering 
-    s.obj <- FindNeighbors(s.obj, reduction = sprintf("%s_PCA", chosen.assay), dims = 1:num.PC.used.in.Clustering)
+    s.obj <- FindNeighbors(s.obj, reduction = pca_reduction_name, dims = 1:num.PC.used.in.Clustering)
     s.obj <- FindClusters(s.obj, resolution = cluster.resolution, random.seed = 0)
     
   } else {
