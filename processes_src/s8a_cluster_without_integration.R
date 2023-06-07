@@ -8,13 +8,13 @@ s8a.cluster.wo.integration <- function(s.obj,
                                       cluster.resolution = 0.5,
                                       my_random_seed = 42,
                                       umap.method = "uwot",
-                                      genes.to.run.PCA = NULL,
+                                      genes.to.not.run.PCA = NULL,
                                       pca_reduction_name = NULL,
                                       umap_reduction_name = NULL){
   chosen.assay <- "RNA"
   DefaultAssay(s.obj) <- chosen.assay
   
-  if (is.null(genes.to.run.PCA) == TRUE){
+  if (is.null(genes.to.not.run.PCA) == TRUE){
     s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name=sprintf("%s_PCA", chosen.assay))
     s.obj <- RunUMAP(s.obj, reduction = sprintf("%s_PCA", chosen.assay), 
                      dims = 1:num.PC.used.in.UMAP, reduction.name=sprintf("%s_UMAP", chosen.assay),
@@ -25,9 +25,14 @@ s8a.cluster.wo.integration <- function(s.obj,
     
   } else {
     if(is.null(pca_reduction_name) == TRUE | is.null(umap_reduction_name) == TRUE){
-      stop("When genes.to.run.PCA is NULL, pca_reduction_name and umap_reduction_name must be used!")
+      stop("When genes.to.not.run.PCA is NULL, pca_reduction_name and umap_reduction_name must be used!")
     } else {
-      s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name = pca_reduction_name, features = genes.to.run.PCA)
+      pca.genes <- setdiff(VariableFeatures(s.obj), genes.to.not.run.PCA)
+      print("####################################################################")
+      print(sprintf("Running PCA with %s genes, after removing %s genes", length(pca.genes), length(genes.to.not.run.PCA)))
+      print("####################################################################")
+      s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name = pca_reduction_name, 
+                      features = pca.genes)
       s.obj <- RunUMAP(s.obj, reduction = pca_reduction_name, 
                        dims = 1:num.PC.used.in.UMAP, reduction.name = umap_reduction_name,
                        seed.use = my_random_seed, umap.method = "uwot")

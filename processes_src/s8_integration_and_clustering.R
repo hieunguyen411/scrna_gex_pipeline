@@ -9,7 +9,7 @@ s8.integration.and.clustering <- function(s.obj,
                            cluster.resolution = 0.5,
                            my_random_seed = 42,
                            umap.method = "uwot",
-                           genes.to.run.PCA = NULL,
+                           genes.to.not.run.PCA = NULL,
                            inte_pca_reduction_name = "INTE_PCA", 
                            inte_umap_reduction_name = "INTE_UMAP"){
   data.list <- SplitObject(s.obj, split.by = "name")
@@ -38,10 +38,15 @@ s8.integration.and.clustering <- function(s.obj,
   
   s.obj <- ScaleData(s.obj, verbose = FALSE, features = row.names(s.obj))
   
-  if (is.null(genes.to.run.PCA) == TRUE){
+  if (is.null(genes.to.not.run.PCA) == TRUE){
     s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name=inte_pca_reduction_name)
   } else {
-    s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name=inte_pca_reduction_name, features = genes.to.run.PCA)
+    pca.genes <- setdiff(VariableFeatures(s.obj), genes.to.not.run.PCA)
+    print("####################################################################")
+    print(sprintf("Running PCA with %s genes, after removing %s genes", length(pca.genes), length(genes.to.not.run.PCA)))
+    print("####################################################################")
+    s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name=inte_pca_reduction_name, 
+                    features = pca.genes)
   }
   
   s.obj <- RunUMAP(s.obj, reduction = inte_pca_reduction_name, dims = 1:num.PC.used.in.UMAP, reduction.name=inte_umap_reduction_name, 
