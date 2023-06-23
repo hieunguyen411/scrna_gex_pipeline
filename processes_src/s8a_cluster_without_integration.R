@@ -11,10 +11,12 @@ s8a.cluster.wo.integration <- function(s.obj,
                                       genes.to.not.run.PCA = NULL,
                                       pca_reduction_name = NULL,
                                       umap_reduction_name = NULL){
-  chosen.assay <- "RNA"
-  DefaultAssay(s.obj) <- chosen.assay
+  DefaultAssay(s.obj) <- "RNA"
   
   if (is.null(genes.to.not.run.PCA) == TRUE){
+    pca_reduction_name <- "RNA_PCA"
+    umap_reduction_name <- "RNA_UMAP"
+    
     s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name=pca_reduction_name)
     s.obj <- RunUMAP(s.obj, reduction = pca_reduction_name, 
                      dims = 1:num.PC.used.in.UMAP, reduction.name=umap_reduction_name,
@@ -25,7 +27,7 @@ s8a.cluster.wo.integration <- function(s.obj,
     
   } else {
     if(is.null(pca_reduction_name) == TRUE | is.null(umap_reduction_name) == TRUE){
-      stop("When genes.to.not.run.PCA is NULL, pca_reduction_name and umap_reduction_name must be used!")
+      stop("When genes.to.not.run.PCA is not NULL, pca_reduction_name and umap_reduction_name must be used!")
     } else {
       pca.genes <- setdiff(VariableFeatures(s.obj), genes.to.not.run.PCA)
       print("####################################################################")
