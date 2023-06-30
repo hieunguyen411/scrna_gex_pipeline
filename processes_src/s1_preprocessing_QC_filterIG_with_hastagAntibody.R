@@ -48,7 +48,7 @@ s1.input.raw.data <- function(path2input,
                                 project = PROJECT)
     
     s.obj@meta.data[, "name"] <- expr.name
-    s.obj@meta.data[, "stage"] <- stage_lst[expr.name]
+    s.obj@meta.data[, "stage"] <- stage_lst[[expr.name]]
     
     # estimate the percentage of mapped reads to Mitochondrial and Ribosome genes
     s.obj[["percent.mt"]] <- PercentageFeatureSet(s.obj, 
