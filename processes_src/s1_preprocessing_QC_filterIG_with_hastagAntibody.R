@@ -41,6 +41,30 @@ s1.input.raw.data <- function(path2input,
     count.data <- input.data$`Gene Expression`
     count.adt <- input.data$`Antibody Capture`
     
+    BR_genes_patterns <- c("Ighv", 
+                           "Ighd",
+                           "Ighj",
+                           "Ighc",
+                           "Igkv",
+                           "Igkj", 
+                           "Igkc",
+                           "Iglv",
+                           "Iglj",
+                           "Iglc") 
+    
+    all_genes <- row.names(count.data)
+    
+    genes.to.exclude <- unlist(lapply(all_genes, function(x){
+      if (substr(x, 1, 4) %in% BR_genes_patterns){
+        return(x)
+      } else {
+        return(NA)
+      }
+    }))
+    genes.to.exclude <- subset(genes.to.exclude, is.na(genes.to.exclude) == FALSE)
+    
+    count.data <- count.data[-(which(rownames(count.data) %in% genes.to.exclude)),]
+    
     expr.name <- names(all_exprs)[i]
     s.obj <- CreateSeuratObject(counts = count.data, 
                                 min.cells = MINCELLS, 
@@ -186,37 +210,6 @@ s1.input.raw.data <- function(path2input,
   
   # add new slot for all.QC into the existed SEURAT OBJECT. 
   s.obj@misc$all.QC <- all.QC
-  
-  ##############################################################################
-  # __________ FILTER TRA/TRB GENES OUT BEFORE DOING D. E. ANALYSIS __________
-  counts <- GetAssayData(s.obj, assay = "RNA")
-  
-  BR_genes_patterns <- c("Ighv", 
-                         "Ighd",
-                         "Ighj",
-                         "Ighc",
-                         "Igkv",
-                         "Igkj", 
-                         "Igkc",
-                         "Iglv",
-                         "Iglj",
-                         "Iglc") 
-  
-  all_genes <- row.names(counts)
-  
-  genes.to.exclude <- unlist(lapply(all_genes, function(x){
-    if (substr(x, 1, 4) %in% BR_genes_patterns){
-      return(x)
-    } else {
-      return(NA)
-    }
-  }))
-  genes.to.exclude <- subset(genes.to.exclude, is.na(genes.to.exclude) == FALSE)
-  
-  counts <- counts[-(which(rownames(counts) %in% genes.to.exclude)),]
-  
-  s.obj.original <- s.obj
-  s.obj <- subset(s.obj, features = rownames(counts))
   
   ##############################################################################
   # __________ ADD CLONAL TYPE INFORMATION __________

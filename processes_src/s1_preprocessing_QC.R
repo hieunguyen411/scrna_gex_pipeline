@@ -113,7 +113,7 @@ s1.input.raw.data <- function(path2input,
   # scatter plot showing the relation between cell read-depth and number of genes detected.
   ## with Mitochondrial percentage
   all.QC$nCount.vs.nFeature.MT <- ggplot(s.obj@meta.data, 
-                                         aes(x=nCount_RNA, y=nFeature_RNA, color=percent.mt, y = ..scaled..)) + 
+                                         aes(x=nCount_RNA, y=nFeature_RNA, color=percent.mt)) + 
     geom_point() + 
     scale_colour_gradient(low = "gray90", high = "black") +
     stat_smooth(method=lm, formula = y ~ x) + # apply a linear regression to show the relation, if existed.
