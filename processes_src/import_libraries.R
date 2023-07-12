@@ -24,9 +24,10 @@ list.of.packages <- c("Seurat",
                       "rcompanion",
                       "argparse",
                       "scatterpie", 
-                      "scales",
-                      "rstatix"
+                      "scales"
 )
+
+## temp removed: rstatix
 
 bioc.packages <- c("celda", 
                    "BiocSingular", 
