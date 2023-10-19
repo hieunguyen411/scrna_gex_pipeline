@@ -428,7 +428,8 @@ run_pipeline_GEX <- function(path2src,
                           pct_mitoceiling = filter.thresholds$pct_mitoceiling,
                           pct_ribofloor = filter.thresholds$pct_ribofloor, 
                           pct_riboceiling = filter.thresholds$pct_riboceiling,
-                          ambientRNA_thres = filter.thresholds$ambientRNA_thres)
+                          ambientRNA_thres = filter.thresholds$ambientRNA_thres,
+                          log10GenesPerUMI_thres = filter.thresholds$log10GenesPerUMI)
       status.message <- sprintf("New output is saved at %s", file.path(path.to.output, "s3_output", sprintf("%s.output.s3.rds", PROJECT)))
       
     } else {

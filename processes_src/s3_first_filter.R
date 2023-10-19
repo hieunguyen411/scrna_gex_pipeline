@@ -10,7 +10,8 @@ s3.filter <- function(s.obj,
                       pct_mitoceiling,
                       pct_ribofloor, 
                       pct_riboceiling,
-                      ambientRNA_thres){
+                      ambientRNA_thres,
+                      log10GenesPerUMI_thres){
   
   if (is.null(nFeatureRNAfloor) == FALSE){
     s.obj <- subset(s.obj, subset = nFeature_RNA > nFeatureRNAfloor)
@@ -45,6 +46,10 @@ s3.filter <- function(s.obj,
   
   if (is.null(ambientRNA_thres) == FALSE){
     s.obj <- subset(s.obj, subset = AmbientRNA < ambientRNA_thres)    
+  }
+  
+  if (is.null(log10GenesPerUMI_thres) == FALSE){
+    s.obj <- subset(s.obj, subset = log10GenesPerUMI >= log10GenesPerUMI_thres)    
   }
   
   if (save.RDS.s3 == TRUE){
