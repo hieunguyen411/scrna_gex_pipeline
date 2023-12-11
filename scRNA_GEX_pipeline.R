@@ -68,7 +68,8 @@ run_pipeline_GEX <- function(path2src,
                          inte_pca_reduction_name = "INTE_PCA",
                          inte_umap_reduction_name = "INTE_UMAP",
                          pca_reduction_name = NULL,
-                         umap_reduction_name = NULL){
+                         umap_reduction_name = NULL,
+                         path.to.s3a.source = NULL){
   
   # load renv.lock file
   # require(renv)
@@ -79,7 +80,11 @@ run_pipeline_GEX <- function(path2src,
   
   # The source file for step 1 is specified in the process
   source(file.path(path2src, "s2_ambient_RNA_correction.R"))
-  source(file.path(path2src, "s3_first_filter.R"))
+  if (is.null(path.to.s3a.source) == FALSE){
+    source(path.to.s3a.source)
+  } else {
+    source(file.path(path2src, "s3_first_filter.R"))    
+  }
   source(file.path(path2src, "s4_Doublet_detection.R"))
   source(file.path(path2src, "s5_preprocess_before_cellCycle_scoring.R"))
   source(file.path(path2src, "s6_cell_cycle_scoring.R"))
@@ -414,7 +419,9 @@ run_pipeline_GEX <- function(path2src,
     write("\n \n ########## PROCESS S3: FILTER ##########", 
           file=log.file, 
           append=TRUE)
-    
+    if (is.null(path.to.s3a.source) == FALSE){
+      write(sprintf("Using additional filter criteria at %s", path.to.s3a.source),file=log.file, append=TRUE)
+    }
     if (rerun[["s3"]] == TRUE | file.exists(file.path(path.to.output, "s3_output", sprintf("%s.output.s3.rds", PROJECT)))  == FALSE){
       s.obj <- s3.filter( s.obj,
                           PROJECT = PROJECT,
@@ -433,7 +440,7 @@ run_pipeline_GEX <- function(path2src,
       status.message <- sprintf("New output is saved at %s", file.path(path.to.output, "s3_output", sprintf("%s.output.s3.rds", PROJECT)))
       
     } else {
-      print("Loading existing results ... ")
+      print("Loading existing results ... s3 ")
       s.obj <- readRDS(file.path(path.to.output, "s3_output", sprintf("%s.output.s3.rds", PROJECT)))
       
       status.message <- sprintf("Seurat object was loaded from %s", file.path(path.to.output, "s3_output", sprintf("%s.output.s3.rds", PROJECT)))

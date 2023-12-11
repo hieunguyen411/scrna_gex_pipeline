@@ -53,7 +53,7 @@ s1.input.raw.data <- function(path2input,
                                                   pattern = "^mt-|^MT-")
     s.obj[["percent.ribo"]] <- PercentageFeatureSet(s.obj, 
                                                     pattern = "^Rpl|^Rps|^RPL|^RPS")
-    
+    count.adt <- count.adt[, colnames(s.obj)]
     adt_assay <- CreateAssayObject(counts = count.adt)
     s.obj[["ADT"]] <- adt_assay
     
