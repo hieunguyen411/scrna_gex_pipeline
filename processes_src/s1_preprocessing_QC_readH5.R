@@ -1,7 +1,7 @@
 
 # __________ Step 1: Input data, preprocessing and QC __________
-s1.input.raw.data <- function(path2input,
-                              stage_lst,
+s1.input.raw.data <- function(path.to.h5.file,
+                              path.to.h5.meta.data,
                               MINCELLS,
                               MINGENES, 
                               PROJECT,
@@ -20,56 +20,22 @@ s1.input.raw.data <- function(path2input,
   #' What do we have in the ouptut of this process?
   #' - All QC plots are stored in the slot "misc" --> all.QC[[plot.name]]
   
-  
-  # Convert the traditional SEURAT object to my modified SEURAT object
-  all_exprs <- Sys.glob(file.path(path2input, "*"))
-  
-  # assign folder names as name of the experiment data. 
-  names(all_exprs) <- to_vec(for(exprs in all_exprs) basename(exprs)) 
-  
-  # print(paste0("Number of scRNA experiments in this dataset: ", length(all_exprs)))
-  
-  data.list = list() # a list containing all experiment data. 
-  
-  for (i in seq_along(all_exprs)){
-    path_to_expr <- all_exprs[i]
-    input.data <- Read10X_h5(path_to_expr) 
-    expr.name <- names(all_exprs)[i]
+  input.data <- Read10X_h5(path.to.h5.file) 
+  meta.data <- read.csv(path.to.h5.meta.data) %>%
+      subset(select = c(X, lib_ID, lib, timepoint, celltype))
     
-    s.obj <- CreateSeuratObject(counts = input.data , 
-                                min.cells = MINCELLS, 
-                                min.features = MINGENES, 
-                                project = PROJECT)
+  s.obj <- CreateSeuratObject(counts = input.data, 
+                              min.cells = MINCELLS, 
+                              min.features = MINGENES,
+                              project = PROJECT)
+  s.obj.metadata <- s.obj@meta.data %>% rownames_to_column("barcode")
+  s.obj.metadata <- merge(s.obj.metadata, meta.data, by.x = "barcode", by.y = "X") 
+  
+  s.obj[["name"]] <- PROJECT
+  s.obj[["stage"]] <- PROJECT
+  s.obj[["percent.mt"]] <- PercentageFeatureSet(s.obj, pattern = "^mt-|^MT-")
+  s.obj[["percent.ribo"]] <- PercentageFeatureSet(s.obj, pattern = "^Rpl|^Rps|^RPL|^RPS")
     
-    s.obj@meta.data[, "name"] <- expr.name
-    s.obj@meta.data[, "stage"] <- stage_lst[expr.name]
-    
-    # estimate the percentage of mapped reads to Mitochondrial and Ribosome genes
-    s.obj[["percent.mt"]] <- PercentageFeatureSet(s.obj, 
-                                                  pattern = "^mt-|^MT-")
-    s.obj[["percent.ribo"]] <- PercentageFeatureSet(s.obj, 
-                                                    pattern = "^Rpl|^Rps|^RPL|^RPS")
-    data.list[[i]] <- s.obj
-    
-    # clean up
-    rm(s.obj)
-  }
-  
-  s.obj <- data.list[[1]]
-  
-  if(length(data.list) > 1){
-    # if there are more than 1 experiment, merge them all into 1 single object. 
-    s.obj <- merge(x = data.list[[1]], 
-                   y = unlist(data.list[2:length(data.list)]),
-                   merge.data = FALSE, 
-                   add.cell.ids = names(all_exprs), 
-                   project = PROJECT)
-  }
-  s.obj[["No.Exprs"]] <- length(all_exprs)
-  
-  s.obj@tools[["meta_order"]] <- list(name = names(all_exprs), 
-                                      stage=unique(stage_lst))
-  
   all.QC <- list()
   
   # Number of cells obtained per experiment/sample

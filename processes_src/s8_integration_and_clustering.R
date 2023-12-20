@@ -11,12 +11,21 @@ s8.integration.and.clustering <- function(s.obj,
                            umap.method = "uwot",
                            genes.to.not.run.PCA = NULL,
                            inte_pca_reduction_name = "INTE_PCA", 
-                           inte_umap_reduction_name = "INTE_UMAP"){
+                           inte_umap_reduction_name = "INTE_UMAP",
+                           scale = FALSE,
+                           with.TSNE = FALSE){
   data.list <- SplitObject(s.obj, split.by = "name")
-  
-  data.list <- lapply(X = data.list, FUN = function(x) {
-    x <- NormalizeData(x)
-    x <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)})
+  if (scale == TRUE){
+    data.list <- lapply(X = data.list, FUN = function(x) {
+      x <- ScaleData(x)
+      x <- NormalizeData(x)
+      x <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)})
+  } else {
+    data.list <- lapply(X = data.list, FUN = function(x) {
+      x <- NormalizeData(x)
+      x <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)})    
+  }
+
   
   k.filter <- 200
   
@@ -51,6 +60,11 @@ s8.integration.and.clustering <- function(s.obj,
   
   s.obj <- RunUMAP(s.obj, reduction = inte_pca_reduction_name, dims = 1:num.PC.used.in.UMAP, reduction.name=inte_umap_reduction_name, 
                    seed.use = my_random_seed, umap.method = umap.method)
+  
+  if (with.TSNE == TRUE){
+    s.obj <- RunTSNE(s.obj, reduction = inte_pca_reduction_name, dims = 1:num.PC.used.in.UMAP, reduction.name="INTE_TSNE", 
+                     seed.use = my_random_seed)
+  }
   
   # clustering 
   s.obj <- FindNeighbors(s.obj, reduction = inte_pca_reduction_name, dims = 1:num.PC.used.in.Clustering)
