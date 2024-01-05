@@ -71,7 +71,9 @@ run_pipeline_GEX <- function(path2src,
                          umap_reduction_name = NULL,
                          path.to.s3a.source = NULL,
                          path.to.h5.file = NULL,
-                         path.to.h5.meta.data = NULL){
+                         path.to.h5.meta.data = NULL,
+                         with.TSNE = FALSE,
+                         k.filter = 200){
   
   # load renv.lock file
   # require(renv)
@@ -521,6 +523,7 @@ run_pipeline_GEX <- function(path2src,
       status.message <- sprintf("New output is saved at %s", file.path(path.to.output, "s6_output", sprintf("%s.output.s6.rds", PROJECT)))
       
     } else {
+      print("Loading existing results ... s6")
       s.obj <- readRDS(file.path(path.to.output, "s6_output", sprintf("%s.output.s6.rds", PROJECT)))
       status.message <- sprintf("Seurat object was loaded from %s", file.path(path.to.output, "s6_output", sprintf("%s.output.s6.rds", PROJECT)))
     }
@@ -574,7 +577,9 @@ run_pipeline_GEX <- function(path2src,
                                              umap.method,
                                              genes.to.not.run.PCA,
                                              inte_pca_reduction_name, 
-                                             inte_umap_reduction_name)
+                                             inte_umap_reduction_name,
+                                             with.TSNE,
+                                             k.filter)
       
       status.message <- sprintf("New output is saved at %s", file.path(path.to.output, "s8_output", sprintf("%s.output.s8.rds", PROJECT)))
       

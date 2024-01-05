@@ -12,27 +12,24 @@ s8.integration.and.clustering <- function(s.obj,
                            genes.to.not.run.PCA = NULL,
                            inte_pca_reduction_name = "INTE_PCA", 
                            inte_umap_reduction_name = "INTE_UMAP",
-                           scale = FALSE,
-                           with.TSNE = FALSE){
-  data.list <- SplitObject(s.obj, split.by = "name")
-  if (scale == TRUE){
-    data.list <- lapply(X = data.list, FUN = function(x) {
-      x <- ScaleData(x)
-      x <- NormalizeData(x)
-      x <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)})
+                           with.TSNE = FALSE,
+                           k.filter = 200){
+  
+  if (is.na(k.filter) == TRUE){
+    k.filter.default <- 200
   } else {
-    data.list <- lapply(X = data.list, FUN = function(x) {
+    k.filter.default <- k.filter
+  }
+  
+  data.list <- SplitObject(s.obj, split.by = "name")
+  data.list <- lapply(X = data.list, FUN = function(x) {
       x <- NormalizeData(x)
       x <- FindVariableFeatures(x, selection.method = "vst", nfeatures = 2000)})    
-  }
-
-  
-  k.filter <- 200
   
   anchors <- FindIntegrationAnchors(object.list = data.list, dims = 1:num.dim.integration, scale=F,
                                     k.filter = k.filter)## THIS IS CCA DIMENSIONS
   
-  s.obj_inte <- IntegrateData(anchorset = anchors, dims = 1:num.dim.integration, k.weight = k.filter) ## THIS IS PCA DIMENSION
+  s.obj_inte <- IntegrateData(anchorset = anchors, dims = 1:num.dim.integration, k.weight = k.filter.default) ## THIS IS PCA DIMENSION
   
   ## keep the order of integration obj
   s.obj_inte <- s.obj_inte[, colnames(s.obj)]
@@ -50,6 +47,7 @@ s8.integration.and.clustering <- function(s.obj,
   if (is.null(genes.to.not.run.PCA) == TRUE){
     s.obj <- RunPCA(s.obj, npcs = num.PCA, verbose = FALSE, reduction.name=inte_pca_reduction_name)
   } else {
+    s.obj <- FindVariableFeatures(s.obj)
     pca.genes <- setdiff(VariableFeatures(s.obj), genes.to.not.run.PCA)
     print("####################################################################")
     print(sprintf("Running PCA with %s genes, after removing %s genes", length(pca.genes), length(genes.to.not.run.PCA)))
