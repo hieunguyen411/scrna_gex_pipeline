@@ -4,7 +4,6 @@
 # Specify the list of packages that need to be imported ########################
 list.of.packages <- c("BiocManager",
                       "optparse", 
-                      "comprehenr", 
                       "tidyverse", 
                       "ggplot2", 
                       "SoupX",
@@ -28,7 +27,9 @@ list.of.packages <- c("BiocManager",
                       "remotes",
                       "PPCI",
                       "writexl",
-                      "devtools"
+                      "devtools",
+                      "svglite",
+                      "ggpubr"
 )
 
 bioc.packages <- c("Seurat",
@@ -45,7 +46,12 @@ bioc.packages <- c("Seurat",
                    "org.Hs.eg.db",
                    "org.Mm.eg.db",
                    "DESeq2",
-                   "diptest"
+                   "diptest",
+                   "methylKit",
+                   "dmrseq",
+                   "bsseq",
+                   "DSS",
+                   "DMRcate"
                    )
 
 # Check if packages are installed ##############################################
