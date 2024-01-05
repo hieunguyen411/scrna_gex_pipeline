@@ -86,5 +86,4 @@ if ("clusterProfiler" %in% installed.packages()[, "Package"] == FALSE) {
     devtools::install_github("YuLab-SMU/clusterProfiler", upgrade = "never")
   }
 }
-library("clusterProfiler")
 # EOF ##########################################################################
