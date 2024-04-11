@@ -73,7 +73,8 @@ run_pipeline_GEX <- function(path2src,
                          path.to.h5.file = NULL,
                          path.to.h5.meta.data = NULL,
                          with.TSNE = FALSE,
-                         k.filter = 200){
+                         k.filter = 200,
+                         sw = NULL){
   
   # load renv.lock file
   # require(renv)
